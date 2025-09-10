@@ -1,0 +1,2011 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能天气穿搭助手</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* 保留原有所有样式 */
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --text-color: #2c3e50;
+            --light-text: #ecf0f1;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --main-bg: rgba(255, 255, 255, 0.1);
+            --home-bg: rgba(255, 255, 255, 0.2);
+            --rainy-bg: rgba(79, 172, 254, 0.2);
+            --cloudy-bg: rgba(212, 211, 221, 0.2);
+            --sunny-bg: rgba(246, 211, 101, 0.2);
+            --suggestion-bg: rgba(224, 247, 233, 0.9);
+            --border-radius: 16px;
+            --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a2980, #26d0ce);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: var(--text-color);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            height: 90vh;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        /* 容器内的视频背景 */
+        .container-video-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            overflow: hidden;
+            border-radius: var(--border-radius);
+        }
+
+        .container-video-bg video {
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            object-fit: cover;
+        }
+
+        .container-video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1;
+            border-radius: var(--border-radius);
+        }
+
+        /* 导航样式 */
+        nav {
+            background: var(--primary-color);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .logo {
+            color: var(--light-text);
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .logo i {
+            margin-right: 10px;
+            font-size: 28px;
+            color: #3498db;
+        }
+
+        .nav-links {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--light-text);
+            border: none;
+            padding: 10px 20px;
+            margin-left: 10px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+            z-index: 10;
+        }
+
+        .nav-btn i {
+            margin-right: 8px;
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            background: rgba(52, 152, 219, 0.5);
+            transform: translateY(-2px);
+        }
+
+        /* 内容区域 */
+        .content {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            z-index: 2;
+        }
+
+        .page {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            padding: 30px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* 首页样式 */
+        .home-page {
+            background: var(--home-bg);
+            transition: background 0.5s ease;
+        }
+
+        .home-page.rainy {
+            background: var(--rainy-bg);
+        }
+
+        .home-page.cloudy {
+            background: var(--cloudy-bg);
+        }
+
+        .home-page.sunny {
+            background: var(--sunny-bg);
+        }
+
+        .ornamental-border {
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: var(--border-radius);
+            height: 100%;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            /* 添加滚动条 */
+            overflow-y: auto;
+        }
+
+        .search-container {
+            display: flex;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+            max-width: 600px;
+            margin: 0 auto 30px;
+        }
+
+        .city-select {
+            flex: 1;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 50px 0 0 50px;
+            font-size: 16px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.9);
+            outline: none;
+        }
+
+        .search-btn {
+            padding: 15px 25px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 0 50px 50px 0;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: var(--transition);
+        }
+
+        .search-btn:hover {
+            background: var(--secondary-color);
+        }
+
+        /* 修改天气显示布局 - 城市名在左，天气在右 */
+        .weather-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+            padding: 0 20px;
+        }
+
+        .location-container {
+            text-align: left;
+            flex: 1;
+            /* 城市名向右移动2cm */
+            margin-right: 75.6px; /* 2cm转换为px (1cm≈37.8px) */
+        }
+
+        .location {
+            font-size: 32px; /* 增大字体 */
+            color: white;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+            font-weight: 700;
+        }
+
+        .weather-info {
+            text-align: right;
+            flex: 1;
+            /* 温度向左移动2cm */
+            margin-left: 75.6px; /* 2cm转换为px */
+        }
+
+        .weather-icon {
+            font-size: 80px;
+            margin-bottom: 10px;
+            color: white;
+            filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.2));
+        }
+
+        .temperature {
+            font-size: 48px;
+            color: white;
+            font-weight: 700;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .weather-description {
+            font-size: 20px;
+            color: white;
+            margin-bottom: 5px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 修改天气指标卡片布局 - 上移0.3cm (原0.1cm + 新增0.2cm) */
+        .weather-details-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, auto);
+            gap: 12px;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            /* 所有指标向上移动0.3cm */
+            margin-top: -11.34px; /* 0.3cm转换为px (1cm≈37.8px) */
+        }
+
+        .weather-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            height: 90px;
+        }
+
+        .weather-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .weather-card i {
+            font-size: 18px;
+            margin-bottom: 5px;
+            color: var(--secondary-color);
+            transition: var(--transition);
+        }
+
+        .weather-card:hover i {
+            transform: scale(1.2);
+        }
+
+        .weather-card h3 {
+            color: var(--primary-color);
+            font-size: 12px;
+            margin-bottom: 5px;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .weather-card p {
+            color: var(--primary-color);
+            font-size: 14px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        /* 预报部分 */
+        .forecast {
+            margin-top: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: white;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            text-align: center;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .forecast-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .forecast-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .forecast-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .forecast-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .forecast-date {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .forecast-weather {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .forecast-temp {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+            margin-right: 10px;
+        }
+
+        .forecast-condition {
+            font-size: 1rem;
+            color: #555;
+        }
+
+        .forecast-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .forecast-detail {
+            font-size: 0.9rem;
+            color: #777;
+        }
+
+        /* 穿搭建议页面 */
+        .outfit-page {
+            background: var(--suggestion-bg);
+        }
+
+        .page-title {
+            font-size: 32px;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            text-align: center;
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+        .page-title::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: var(--secondary-color);
+            border-radius: 2px;
+        }
+
+        .advice-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .advice-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .advice-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .advice-card h3 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            font-size: 20px;
+        }
+
+        .advice-card h3 i {
+            margin-right: 12px;
+            color: var(--secondary-color);
+            font-size: 24px;
+        }
+
+        .advice-card p {
+            color: #5a6c7d;
+            line-height: 1.6;
+            flex-grow: 1;
+            font-size: 16px;
+        }
+
+        .advice-icon {
+            font-size: 40px;
+            text-align: center;
+            margin-bottom: 15px;
+            color: var(--secondary-color);
+            transition: var(--transition);
+        }
+
+        .advice-card:hover .advice-icon {
+            transform: rotate(10deg) scale(1.1);
+        }
+
+        /* 指数页面 */
+        .indexes {
+            margin-top: 30px;
+        }
+
+        .index-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .index-item {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+        }
+
+        .index-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .index-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(52, 152, 219, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: var(--secondary-color);
+            font-size: 1.5rem;
+        }
+
+        .index-info {
+            flex: 1;
+        }
+
+        .index-name {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .index-value {
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+
+        .index-desc {
+            font-size: 0.9rem;
+            color: #777;
+            margin-top: 3px;
+        }
+
+        /* 其他建议页面 */
+        .other-page {
+            background: var(--suggestion-bg);
+        }
+
+        /* 指标详情弹出层 */
+        .detail-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+        }
+
+        .detail-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .detail-card {
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            border-radius: var(--border-radius);
+            padding: 30px;
+            position: relative;
+            transform: translateY(20px);
+            transition: var(--transition);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .detail-overlay.active .detail-card {
+            transform: translateY(0);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #7f8c8d;
+            transition: var(--transition);
+        }
+
+        .close-btn:hover {
+            color: var(--accent-color);
+            transform: rotate(90deg);
+        }
+
+        /* 加载动画 */
+        .loader {
+            display: none;
+            width: 48px;
+            height: 48px;
+            border: 5px solid var(--primary-color);
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            animation: rotation 1s linear infinite;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100;
+        }
+
+        @keyframes rotation {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+           100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        
+        /* 视频控制按钮 */
+        .video-control {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.8);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            transition: var(--transition);
+        }
+        
+        .video-control:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: scale(1.1);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1100px) {
+            .weather-details-container {
+                grid-template-columns: repeat(2, 1fr);
+                grid-template-rows: repeat(3, auto);
+            }
+        }
+
+        @media (max-width: 992px) {
+            nav {
+                flex-direction: column;
+                padding: 15px;
+            }
+            
+            .nav-links {
+                margin-top: 15px;
+                width: 100%;
+                justify-content: space-around;
+            }
+            
+            .nav-btn {
+                margin: 0 5px;
+                padding: 8px 15px;
+                font-size: 14px;
+            }
+            
+            .temperature {
+                font-size: 40px;
+            }
+            
+            .weather-icon {
+                font-size: 70px;
+            }
+            
+            .advice-container, .index-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .page-title {
+                font-size: 28px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .weather-details-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .weather-display {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .location-container, .weather-info {
+                text-align: center;
+            }
+            
+            .location {
+                font-size: 28px;
+                margin-bottom: 15px;
+            }
+            
+            .temperature {
+                font-size: 36px;
+            }
+            
+            .weather-icon {
+                font-size: 60px;
+            }
+            
+            .weather-description {
+                font-size: 16px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .weather-details-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .search-container {
+                flex-direction: column;
+            }
+            
+            .city-select {
+                border-radius: 50px;
+                margin-bottom: 10px;
+            }
+            
+            .search-btn {
+                border-radius: 50px;
+            }
+            
+            .location {
+                font-size: 24px;
+            }
+            
+            .temperature {
+                font-size: 32px;
+            }
+            
+            .weather-icon {
+                font-size: 50px;
+            }
+            
+            .weather-description {
+                font-size: 14px;
+            }
+            
+            .weather-card {
+                height: 80px;
+            }
+            
+            .weather-card i {
+                font-size: 16px;
+            }
+            
+            .weather-card h3 {
+                font-size: 11px;
+            }
+            
+            .weather-card p {
+                font-size: 13px;
+            }
+        }
+
+        /* 动画效果 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        /* 新增的穿搭小贴士页面样式 */
+        .tips-page {
+            background: var(--suggestion-bg);
+        }
+
+        /* 生活指数页面样式 */
+        .indices-page {
+            background: var(--suggestion-bg);
+        }
+
+        /* 调整搜索容器位置 */
+        .search-container {
+            position: relative;
+        }
+
+        /* 穿搭小贴士内容样式 */
+        .outfit-tips-container {
+            margin-top: 20px;
+        }
+
+        .outfit-tip {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: var(--box-shadow);
+        }
+
+        .outfit-tip h4 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .outfit-tip h4 i {
+            margin-right: 10px;
+            color: var(--secondary-color);
+        }
+
+        .outfit-tip p {
+            color: #5a6c7d;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 容器内的视频背景 -->
+        <div class="container-video-bg">
+            <!-- 视频源将在JavaScript中动态设置 -->
+            <video autoplay muted loop playsinline id="container-video">
+                您的浏览器不支持视频标签。
+            </video>
+            <div class="container-video-overlay"></div>
+        </div>
+        
+        <!-- 视频控制按钮 -->
+        <button class="video-control" id="video-control" title="暂停/播放背景视频">
+            <i class="fas fa-pause"></i>
+        </button>
+
+        <nav>
+            <div class="logo">
+                <i class="fas fa-cloud-sun-rain"></i>
+                <span>智能天气穿搭助手</span>
+            </div>
+            <div class="nav-links">
+                <button class="nav-btn active" data-page="home-page"><i class="fas fa-home"></i> 首页</button>
+                <button class="nav-btn" data-page="outfit-page"><i class="fas fa-tshirt"></i> 穿搭建议</button>
+                <button class="nav-btn" data-page="tips-page"><i class="fas fa-lightbulb"></i> 穿搭小贴士</button>
+                <button class="nav-btn" data-page="indices-page"><i class="fas fa-chart-line"></i> 生活指数</button>
+                <button class="nav-btn" data-page="other-page"><i class="fas fa-hiking"></i> 其他建议</button>
+            </div>
+        </nav>
+        
+        <div class="content">
+            <!-- 首页 -->
+            <div class="page home-page active" id="home-page">
+                <div class="loader" id="loader"></div>
+                <div class="ornamental-border">
+                    <div class="search-container">
+                        <select class="city-select" id="city-select">
+                            <option value="北京">北京</option>
+                            <option value="上海">上海</option>
+                            <option value="广州">广州</option>
+                            <option value="深圳">深圳</option>
+                            <option value="杭州">杭州</option>
+                            <option value="成都">成都</option>
+                            <option value="武汉">武汉</option>
+                            <option value="西安">西安</option>
+                            <option value="南京">南京</option>
+                            <option value="苏州">苏州</option>
+                            <option value="重庆">重庆</option>
+                            <option value="天津">天津</option>
+                            <option value="青岛">青岛</option>
+                            <option value="厦门">厦门</option>
+                            <option value="哈尔滨">哈尔滨</option>
+                            <option value="大连">大连</option>
+                        </select>
+                        <button class="search-btn" id="search-btn"><i class="fas fa-search"></i> 查询天气</button>
+                    </div>
+                    
+                    <!-- 修改后的天气显示布局 -->
+                    <div class="weather-display">
+                        <div class="location-container">
+                            <div class="location">北京市</div>
+                        </div>
+                        <div class="weather-info">
+                            <i class="fas fa-sun weather-icon"></i>
+                            <div class="temperature">26°C</div>
+                            <div class="weather-description">晴天</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 天气指标布局 -->
+                    <div class="weather-details-container">
+                        <div class="weather-card" data-detail="体感温度">
+                            <i class="fas fa-temperature-high"></i>
+                            <h3>体感温度</h3>
+                            <p>28°C</p>
+                        </div>
+                        <div class="weather-card" data-detail="风向">
+                            <i class="fas fa-wind"></i>
+                            <h3>风向</h3>
+                            <p>东南风 3级</p>
+                        </div>
+                        <div class="weather-card" data-detail="湿度">
+                            <i class="fas fa-tint"></i>
+                            <h3>湿度</h3>
+                            <p>65%</p>
+                        </div>
+                        <div class="weather-card" data-detail="紫外线">
+                            <i class="fas fa-sun"></i>
+                            <h3>紫外线</h3>
+                            <p>中等</p>
+                        </div>
+                        <div class="weather-card" data-detail="能见度">
+                            <i class="fas fa-eye"></i>
+                            <h3>能见度</h3>
+                            <p>10公里</p>
+                        </div>
+                        <div class="weather-card" data-detail="气压">
+                            <i class="fas fa-compress-arrows-alt"></i>
+                            <h3>气压</h3>
+                            <p>1015 hPa</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 天气预报 -->
+                    <div class="forecast">
+                        <h3 class="section-title">未来三天天气预报</h3>
+                        <div class="forecast-cards" id="forecast-cards">
+                            <div class="forecast-card">
+                                <div class="forecast-date" id="forecast-date-1">11月16日 星期四</div>
+                                <div class="forecast-weather">
+                                    <div class="forecast-temp" id="forecast-temp-1">26°C</div>
+                                    <div class="forecast-condition" id="forecast-condition-1">晴</div>
+                                </div>
+                                <div class="forecast-details">
+                                    <div class="forecast-detail">风力: <span id="forecast-wind-1">东南风3级</span></div>
+                                    <div class="forecast-detail">湿度: <span id="forecast-humidity-1">50%</span></div>
+                                </div>
+                            </div>
+                            
+                            <div class="forecast-card">
+                                <div class="forecast-date" id="forecast-date-2">11月17日 星期五</div>
+                                <div class="forecast-weather">
+                                    <div class="forecast-temp" id="forecast-temp-2">23°C</div>
+                                    <div class="forecast-condition" id="forecast-condition-2">多云</div>
+                                </div>
+                                <div class="forecast-details">
+                                    <div class="forecast-detail">风力: <span id="forecast-wind-2">东风2级</span></div>
+                                    <div class="forecast-detail">湿度: <span id="forecast-humidity-2">60%</span></div>
+                                </div>
+                            </div>
+                            
+                            <div class="forecast-card">
+                                <div class="forecast-date" id="forecast-date-3">11月18日 星期六</div>
+                                <div class="forecast-weather">
+                                    <div class="forecast-temp" id="forecast-temp-3">20°C</div>
+                                    <div class="forecast-condition" id="forecast-condition-3">小雨</div>
+                                </div>
+                                <div class="forecast-details">
+                                    <div class="forecast-detail">风力: <span id="forecast-wind-3">北风4级</span></div>
+                                    <div class="forecast-detail">湿度: <span id="forecast-humidity-3">75%</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 穿搭建议页面 -->
+            <div class="page outfit-page" id="outfit-page">
+                <h2 class="page-title">今日穿搭建议</h2>
+                
+                <div class="advice-container">
+                    <div class="advice-card">
+                        <div class="advice-icon">
+                            <i class="fas fa-tshirt"></i>
+                        </div>
+                        <h3>穿衣建议</h3>
+                        <p>今日气温适宜，建议穿着轻便的棉麻材质服装，可搭配一件薄外套以备傍晚温度下降。选择浅色系衣物可以更好地反射阳光，保持凉爽舒适。</p>
+                    </div>
+                    
+                    <div class="advice-card">
+                        <div class="advice-icon">
+                            <i class="fas fa-sun"></i>
+                        </div>
+                        <h3>防晒建议</h3>
+                        <p>紫外线强度中等，外出建议涂擦SPF15-20、PA+的防晒护肤品，戴帽子、太阳镜。上午10点至下午2点紫外线最强，尽量避免长时间直接暴露在阳光下。</p>
+                    </div>
+                    
+                    <div class="advice-card">
+                        <div class="advice-icon">
+                            <i class="fas fa-allergies"></i>
+                        </div>
+                        <h3>过敏提醒</h3>
+                        <p>今日花粉浓度较低，过敏风险较小，但敏感人群还是建议减少户外活动。外出回家后及时更换衣物并洗脸，可以减少花粉接触。</p>
+                    </div>
+
+                    <div class="advice-card">
+                        <div class="advice-icon">
+                            <i class="fas fa-shoe-prints"></i>
+                        </div>
+                        <h3>鞋类建议</h3>
+                        <p>今日天气干燥，适合穿着透气性好的运动鞋或休闲鞋。如果您计划长时间步行，建议选择有良好支撑功能的鞋子以保护脚部。</p>
+                    </div>
+
+                    <div class="advice-card">
+                        <div class="advice-icon">
+                            <i class="fas fa-umbrella"></i>
+                        </div>
+                        <h3>雨具准备</h3>
+                        <p>今日无降水概率，无需携带雨具。但建议关注晚间天气变化，如有户外活动计划，可准备轻便雨具以防万一。</p>
+                    </div>
+
+                    <div class="advice-card">
+                        <div class="advice-icon">
+                            <i class="fas fa-wind"></i>
+                        </div>
+                        <h3>防风建议</h3>
+                        <p>今日风力较小，无需特别防风措施。但傍晚时分可能有微风，如需长时间在户外，可准备一件轻便防风外套。</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 穿搭小贴士页面 -->
+            <div class="page tips-page" id="tips-page">
+                <h2 class="page-title">穿搭小贴士</h2>
+                
+                <div class="outfit-tips-container">
+                    <div class="outfit-tips">
+                        <div class="outfit-tip">
+                            <h4><i class="fas fa-tshirt"></i> 材质选择</h4>
+                            <p>选择棉、麻等天然材质，透气性好，适合当前天气。避免合成纤维材质，容易产生静电且不透气。</p>
+                        </div>
+                        <div class="outfit-tip">
+                            <h4><i class="fas fa-palette"></i> 颜色搭配</h4>
+                            <p>浅色系衣物反射阳光，有助于保持凉爽。可以考虑蓝色、白色、浅灰色等清爽色调。</p>
+                        </div>
+                        <div class="outfit-tip">
+                            <h4><i class="fas fa-layer-group"></i> 分层穿着</h4>
+                            <p>采用分层穿着法，方便根据温度变化调整衣物。内搭选择吸汗透气的材质，外套选择轻便款式。</p>
+                        </div>
+                        <div class="outfit-tip">
+                            <h4><i class="fas fa-child"></i> 特殊人群</h4>
+                            <p>老年人和儿童对温度变化更敏感，建议比成年人多穿一件薄外套，方便随时增减衣物。</p>
+                        </div>
+                        <div class="outfit-tip">
+                            <h4><i class="fas fa-tshirt"></i> 季节穿搭</h4>
+                            <p>春季穿搭以轻便为主，可选择薄款外套搭配长袖T恤；夏季以透气凉爽为主，选择棉麻材质；秋季注重保暖，可搭配针织衫；冬季则以保暖防寒为主，选择羽绒服等厚重衣物。</p>
+                        </div>
+                        <div class="outfit-tip">
+                            <h4><i class="fas fa-shoe-prints"></i> 鞋类搭配</h4>
+                            <p>根据不同场合选择合适的鞋类：运动时选择运动鞋，正式场合选择皮鞋，休闲时选择休闲鞋。雨天记得选择防滑防水鞋款。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 生活指数页面 -->
+            <div class="page indices-page" id="indices-page">
+                <h2 class="page-title">生活指数</h2>
+                
+                <div class="indexes">
+                    <h3 class="section-title">今日生活指数</h3>
+                    
+                    <div class="index-grid">
+                        <div class="index-item">
+                            <div class="index-icon">
+                                <i class="fas fa-sun"></i>
+                            </div>
+                            <div class="index-info">
+                                <div class="index-name">紫外线指数</div>
+                                <div class="index-value" id="uv-index">中等</div>
+                                <div class="index-desc" id="uv-desc">外出需涂抹防晒霜</div>
+                            </div>
+                        </div>
+                        
+                        <div class="index-item">
+                            <div class="index-icon">
+                                <i class="fas fa-tshirt"></i>
+                            </div>
+                            <div class="index-info">
+                                <div class="index-name">穿衣指数</div>
+                                <div class="index-value" id="dressing-index">舒适</div>
+                                <div class="index-desc" id="dressing-desc">建议穿着长袖衬衫单裤等服装</div>
+                            </div>
+                        </div>
+                        
+                        <div class="index-item">
+                            <div class="index-icon">
+                                <i class="fas fa-car"></i>
+                            </div>
+                            <div class="index-info">
+                                <div class="index-name">洗车指数</div>
+                                <div class="index-value" id="carwash-index">适宜</div>
+                                <div class="index-desc" id="carwash-desc">适合洗车，明后两天保持天气良好</div>
+                            </div>
+                        </div>
+                        
+                        <div class="index-item">
+                            <div class="index-icon">
+                                <i class="fas fa-head-side-cough"></i>
+                            </div>
+                            <div class="index-info">
+                                <div class="index-name">感冒指数</div>
+                                <div class="index-value" id="cold-index">少发</div>
+                                <div class="index-desc" id="cold-desc">感冒不易发生，避免长期处于空调房</div>
+                            </div>
+                        </div>
+                        
+                        <div class="index-item">
+                            <div class="index-icon">
+                                <i class="fas fa-wind"></i>
+                            </div>
+                            <div class="index-info">
+                                <div class="index-name">舒适度指数</div>
+                                <div class="index-value">舒适</div>
+                                <div class="index-desc">天气舒适，适宜外出活动</div>
+                            </div>
+                        </div>
+                        
+                        <div class="index-item">
+                            <div class="index-icon">
+                                <i class="fas fa-umbrella"></i>
+                            </div>
+                            <div class="index-info">
+                                <div class="index-name">雨伞指数</div>
+                                <div class="index-value">不必带</div>
+                                <div class="index-desc">今日无雨，无需雨具</div>
+                            </div>
+                        </div>
+                        
+                        <div class="index-item">
+                            <div class="index-icon">
+                                <i class="fas fa-heart"></i>
+                            </div>
+                            <div class="index-info">
+                                <div class="index-name">运动指数</div>
+                                <div class="index-value">适宜</div>
+                                <div class="index-desc">天气适宜，推荐户外运动</div>
+                            </div>
+                        </div>
+                        
+                        <div class="index-item">
+                            <div class="index-icon">
+                                <i class="fas fa-tree"></i>
+                            </div>
+                            <div class="index-info">
+                                <div class="index-name">旅游指数</div>
+                                <div class="index-value">适宜</div>
+                                <div class="index-desc">天气良好，适宜旅游观光</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 其他建议页面 -->
+            <div class="page other-page" id="other-page">
+                <h2 class="page-title">其他活动建议</h2>
+                
+                <div class="advice-container">
+                    <div class="advice-card">
+                        <div class="advice-icon">
+                            <i class="fas fa-running"></i>
+                        </div>
+                        <h3>运动建议</h3>
+                        <p>非常适合户外运动，可以进行慢跑、骑自行车或球类运动，注意补充水分。</p>
+                    </div>
+                    
+                    <div class="advice-card">
+                        <div class="advice-icon">
+                            <i class="fas fa-fish"></i>
+                        </div>
+                        <h3>钓鱼建议</h3>
+                        <p>今日气压适宜，鱼类活跃度较高，是钓鱼的好时机，建议使用活饵。</p>
+                    </div>
+                    
+                    <div class="advice-card">
+                        <div class="advice-icon">
+                            <i class="fas fa-car"></i>
+                        </div>
+                        <h3>洗车建议</h3>
+                        <p>未来24小时无雨，适合洗车，建议上午进行洗车作业，让车辆快速晾干。</p>
+                    </div>
+                    
+                    <div class="advice-card">
+                        <div class="advice-icon">
+                            <i class="fas fa-utensils"></i>
+                        </div>
+                        <h3>饮食建议</h3>
+                        <p>天气较热，建议多补充水分，食用清淡易消化的食物，多吃水果蔬菜，避免过于油腻的食品。</p>
+                    </div>
+                    
+                    <div class="advice-card">
+                        <div class="advice-icon">
+                            <i class="fas fa-bed"></i>
+                        </div>
+                        <h3>睡眠建议</h3>
+                        <p>夜间温度适宜，适合开窗通风睡眠，但注意避免直接吹风，防止感冒。</p>
+                    </div>
+                    
+                    <div class="advice-card">
+                        <div class="advice-icon">
+                            <i class="fas fa-shopping-bag"></i>
+                        </div>
+                        <h3>购物建议</h3>
+                        <p>天气良好，适合外出购物，商场和户外市集都是不错的选择，注意防晒和补充水分。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>数据更新时间：<span id="update-time">--</span></p>
+        </footer>
+    </div>
+    
+    <!-- 指标详情弹出层 -->
+    <div class="detail-overlay" id="detail-overlay">
+        <div class="detail-card">
+            <button class="close-btn" id="close-detail">
+                <i class="fas fa-times"></i>
+            </button>
+            <h2 id="detail-title">指标详情</h2>
+            <p id="detail-content">这里是指标的详细解释和信息...</p>
+        </div>
+    </div>
+
+    <script>
+        // 模拟天气数据
+        const weatherData = {
+            '北京': { 
+                temp: 26, 
+                feel: 28, 
+                wind: '东南风 3级', 
+                humidity: '65%', 
+                uv: '中等', 
+                visibility: '10公里', 
+                pressure: '1015 hPa', 
+                air: '良', 
+                type: 'sunny', 
+                desc: '晴天',
+                sunrise: '06:45',
+                sunset: '17:05',
+                uvIndex: '中等',
+                uvDesc: '外出需涂抹防晒霜',
+                dressingIndex: '舒适',
+                dressingDesc: '建议穿着长袖衬衫单裤等服装',
+                carwashIndex: '适宜',
+                carwashDesc: '适合洗车，明后两天保持天气良好',
+                coldIndex: '少发',
+                coldDesc: '感冒不易发生，避免长期处于空调房'
+            },
+            '上海': { 
+                temp: 28, 
+                feel: 30, 
+                wind: '东风 4级', 
+                humidity: '75%', 
+                uv: '强', 
+                visibility: '8公里', 
+                pressure: '1010 hPa', 
+                air: '良', 
+                type: 'cloudy', 
+                desc: '多云',
+                sunrise: '06:30',
+                sunset: '17:20',
+                uvIndex: '强',
+                uvDesc: '外出需加强防护',
+                dressingIndex: '较舒适',
+                dressingDesc: '建议穿着薄外套牛仔裤等服装',
+                carwashIndex: '较适宜',
+                carwashDesc: '较适合洗车，未来一天无雨',
+                coldIndex: '易发',
+                coldDesc: '易发生感冒，请加强防护'
+            },
+            '广州': { 
+                temp: 32, 
+                feel: 35, 
+                wind: '南风 2级', 
+                humidity: '80%', 
+                uv: '很强', 
+                visibility: '12公里', 
+                pressure: '1008 hPa', 
+                air: '优', 
+                type: 'sunny', 
+                desc: '晴天',
+                sunrise: '06:20',
+                sunset: '17:40',
+                uvIndex: '很强',
+                uvDesc: '避免长时间户外活动',
+                dressingIndex: '热',
+                dressingDesc: '建议穿着短袖、短裤等夏季服装',
+                carwashIndex: '适宜',
+                carwashDesc: '适合洗车，明后两天保持天气良好',
+                coldIndex: '少发',
+                coldDesc: '感冒不易发生，避免长期处于空调房'
+            },
+            '深圳': { 
+                temp: 31, 
+                feel: 34, 
+                wind: '西南风 3级', 
+                humidity: '78%', 
+                uv: '强', 
+                visibility: '15公里', 
+                pressure: '1009 hPa', 
+                air: '优', 
+                type: 'sunny', 
+                desc: '晴天',
+                sunrise: '06:25',
+                sunset: '17:35',
+                uvIndex: '强',
+                uvDesc: '外出需加强防护',
+                dressingIndex: '热',
+                dressingDesc: '建议穿着短袖、短裤等夏季服装',
+                carwashIndex: '适宜',
+                carwashDesc: '适合洗车，明后两天保持天气良好',
+                coldIndex: '少发',
+                coldDesc: '感冒不易发生，避免长期处于空调房'
+            },
+            '杭州': { 
+                temp: 27, 
+                feel: 29, 
+                wind: '东风 3级', 
+                humidity: '70%', 
+                uv: '中等', 
+                visibility: '9公里', 
+                pressure: '1012 hPa', 
+                air: '良', 
+                type: 'cloudy', 
+                desc: '多云',
+                sunrise: '06:35',
+                sunset: '17:15',
+                uvIndex: '中等',
+                uvDesc: '外出需涂抹防晒霜',
+                dressingIndex: '舒适',
+                dressingDesc: '建议穿着长袖衬衫单裤等服装',
+                carwashIndex: '较适宜',
+                carwashDesc: '较适合洗车，未来一天无雨',
+                coldIndex: '少发',
+                coldDesc: '感冒不易发生，避免长期处于空调房'
+            },
+            '成都': { 
+                temp: 24, 
+                feel: 26, 
+                wind: '北风 2级', 
+                humidity: '68%', 
+                uv: '弱', 
+                visibility: '7公里', 
+                pressure: '1014 hPa', 
+                air: '良', 
+                type: 'rainy', 
+                desc: '小雨',
+                sunrise: '07:10',
+                sunset: '17:50',
+                uvIndex: '弱',
+                uvDesc: '辐射较弱',
+                dressingIndex: '较冷',
+                dressingDesc: '建议穿着风衣毛衣等服装',
+                carwashIndex: '不适宜',
+                carwashDesc: '不适合洗车，明天有雨',
+                coldIndex: '极易发',
+                coldDesc: '极易发生感冒，请特别注意防护'
+            },
+            '武汉': { 
+                temp: 29, 
+                feel: 32, 
+                wind: '西南风 3级', 
+                humidity: '72%', 
+                uv: '中等', 
+                visibility: '11公里', 
+                pressure: '1011 hPa', 
+                air: '良', 
+                type: 'cloudy', 
+                desc: '多云',
+                sunrise: '06:40',
+                sunset: '17:25',
+                uvIndex: '中等',
+                uvDesc: '外出需涂抹防晒霜',
+                dressingIndex: '较舒适',
+                dressingDesc: '建议穿着薄外套牛仔裤等服装',
+                carwashIndex: '较适宜',
+                carwashDesc: '较适合洗车，未来一天无雨',
+                coldIndex: '易发',
+                coldDesc: '易发生感冒，请加强防护'
+            },
+            '西安': { 
+                temp: 25, 
+                feel: 27, 
+                wind: '东北风 2级', 
+                humidity: '62%', 
+                uv: '中等', 
+                visibility: '8公里', 
+                pressure: '1013 hPa', 
+                air: '轻度污染', 
+                type: 'cloudy', 
+                desc: '阴天',
+                sunrise: '07:05',
+                sunset: '17:30',
+                uvIndex: '中等',
+                uvDesc: '外出需涂抹防晒霜',
+                dressingIndex: '舒适',
+                dressingDesc: '建议穿着长袖衬衫单裤等服装',
+                carwashIndex: '较适宜',
+                carwashDesc: '较适合洗车，未来一天无雨',
+                coldIndex: '少发',
+                coldDesc: '感冒不易发生，避免长期处于空调房'
+            },
+            '南京': { 
+                temp: 27, 
+                feel: 29, 
+                wind: '东南风 3级', 
+                humidity: '74%', 
+                uv: '中等', 
+                visibility: '10公里', 
+                pressure: '1012 hPa', 
+                air: '良', 
+                type: 'cloudy', 
+                desc: '多云',
+                sunrise: '06:35',
+                sunset: '17:15',
+                uvIndex: '中等',
+                uvDesc: '外出需涂抹防晒霜',
+                dressingIndex: '舒适',
+                dressingDesc: '建议穿着长袖衬衫单裤等服装',
+                carwashIndex: '较适宜',
+                carwashDesc: '较适合洗车，未来一天无雨',
+                coldIndex: '少发',
+                coldDesc: '感冒不易发生，避免长期处于空调房'
+            },
+            '苏州': { 
+                temp: 26, 
+                feel: 28, 
+                wind: '东风 2级', 
+                humidity: '76%', 
+                uv: '中等', 
+                visibility: '9公里', 
+                pressure: '1012 hPa', 
+                air: '良', 
+                type: 'cloudy', 
+                desc: '多云',
+                sunrise: '06:30',
+                sunset: '17:20',
+                uvIndex: '中等',
+                uvDesc: '外出需涂抹防晒霜',
+                dressingIndex: '舒适',
+                dressingDesc: '建议穿着长袖衬衫单裤等服装',
+                carwashIndex: '较适宜',
+                carwashDesc: '较适合洗车，未来一天无雨',
+                coldIndex: '少发',
+                coldDesc: '感冒不易发生，避免长期处于空调房'
+            },
+            '重庆': { 
+                temp: 30, 
+                feel: 33, 
+                wind: '南风 1级', 
+                humidity: '82%', 
+                uv: '弱', 
+                visibility: '6公里', 
+                pressure: '1007 hPa', 
+                air: '良', 
+                type: 'rainy', 
+                desc: '阵雨',
+                sunrise: '07:15',
+                sunset: '17:55',
+                uvIndex: '弱',
+                uvDesc: '辐射较弱',
+                dressingIndex: '热',
+                dressingDesc: '建议穿着短袖、短裤等夏季服装',
+                carwashIndex: '不适宜',
+                carwashDesc: '不适合洗车，明天有雨',
+                coldIndex: '易发',
+                coldDesc: '易发生感冒，请加强防护'
+            },
+            '天津': { 
+                temp: 25, 
+                feel: 27, 
+                wind: '西北风 4级', 
+                humidity: '60%', 
+                uv: '中等', 
+                visibility: '12公里', 
+                pressure: '1015 hPa', 
+                air: '轻度污染', 
+                type: 'sunny', 
+                desc: '晴天',
+                sunrise: '06:50',
+                sunset: '17:10',
+                uvIndex: '中等',
+                uvDesc: '外出需涂抹防晒霜',
+                dressingIndex: '舒适',
+                dressingDesc: '建议穿着长袖衬衫单裤等服装',
+                carwashIndex: '适宜',
+                carwashDesc: '适合洗车，明后两天保持天气良好',
+                coldIndex: '少发',
+                coldDesc: '感冒不易发生，避免长期处于空调房'
+            },
+            '青岛': { 
+                temp: 23, 
+                feel: 25, 
+                wind: '海风 4级', 
+                humidity: '78%', 
+                uv: '中等', 
+                visibility: '15公里', 
+                pressure: '1014 hPa', 
+                air: '优', 
+                type: 'cloudy', 
+                desc: '多云',
+                sunrise: '06:40',
+                sunset: '17:20',
+                uvIndex: '中等',
+                uvDesc: '外出需涂抹防晒霜',
+                dressingIndex: '较舒适',
+                dressingDesc: '建议穿着薄外套牛仔裤等服装',
+                carwashIndex: '较适宜',
+                carwashDesc: '较适合洗车，未来一天无雨',
+                coldIndex: '少发',
+                coldDesc: '感冒不易发生，避免长期处于空调房'
+            },
+            '厦门': { 
+                temp: 28, 
+                feel: 30, 
+                wind: '东南风 3级', 
+                humidity: '75%', 
+                uv: '强', 
+                visibility: '20公里', 
+                pressure: '1010 hPa', 
+                air: '优', 
+                type: 'sunny', 
+                desc: '晴天',
+                sunrise: '06:25',
+                sunset: '17:30',
+                uvIndex: '强',
+                uvDesc: '外出需加强防护',
+                dressingIndex: '较舒适',
+                dressingDesc: '建议穿着薄外套牛仔裤等服装',
+                carwashIndex: '适宜',
+                carwashDesc: '适合洗车，明后两天保持天气良好',
+                coldIndex: '少发',
+                coldDesc: '感冒不易发生，避免长期处于空调房'
+            },
+            '哈尔滨': { 
+                temp: 18, 
+                feel: 20, 
+                wind: '西北风 3级', 
+                humidity: '58%', 
+                uv: '中等', 
+                visibility: '15公里', 
+                pressure: '1018 hPa', 
+                air: '优', 
+                type: 'sunny', 
+                desc: '晴天',
+                sunrise: '06:55',
+                sunset: '16:45',
+                uvIndex: '中等',
+                uvDesc: '外出需涂抹防晒霜',
+                dressingIndex: '较冷',
+                dressingDesc: '建议穿着风衣毛衣等服装',
+                carwashIndex: '适宜',
+                carwashDesc: '适合洗车，明后两天保持天气良好',
+                coldIndex: '极易发',
+                coldDesc: '极易发生感冒，请特别注意防护'
+            },
+            '大连': { 
+                temp: 22, 
+                feel: 24, 
+                wind: '海风 4级', 
+                humidity: '72%', 
+                uv: '中等', 
+                visibility: '18公里', 
+                pressure: '1015 hPa', 
+                air: '优', 
+                type: 'cloudy', 
+                desc: '多云',
+                sunrise: '06:45',
+                sunset: '17:15',
+                uvIndex: '中等',
+                uvDesc: '外出需涂抹防晒霜',
+                dressingIndex: '舒适',
+                dressingDesc: '建议穿着长袖衬衫单裤等服装',
+                carwashIndex: '较适宜',
+                carwashDesc: '较适合洗车，未来一天无雨',
+                coldIndex: '少发',
+                coldDesc: '感冒不易发生，避免长期处于空调房'
+            }
+        };
+
+        // 页面切换功能
+        document.querySelectorAll('.nav-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                // 更新活动按钮
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                this.classList.add('active');
+                
+                // 显示对应页面
+                const pageId = this.getAttribute('data-page');
+                document.querySelectorAll('.page').forEach(page => {
+                    page.classList.remove('active');
+                });
+                document.getElementById(pageId).classList.add('active');
+            });
+        });
+        
+        // 搜索功能
+        document.getElementById('search-btn').addEventListener('click', function() {
+            const city = document.getElementById('city-select').value;
+            searchWeather(city);
+        });
+        
+        // 搜索天气函数
+        function searchWeather(city) {
+            const loader = document.getElementById('loader');
+            loader.style.display = 'block';
+            
+            // 模拟网络请求延迟
+            setTimeout(() => {
+                if (city && weatherData[city]) {
+                    updateWeather(weatherData[city], city);
+                    updateSuggestions(weatherData[city], city);
+                    updateForecast(city);
+                    updateIndices(weatherData[city]);
+                    updateVideoBackground(weatherData[city].type, weatherData[city].desc);
+                } else {
+                    alert('找不到该城市的天气数据，请尝试其他城市');
+                }
+                loader.style.display = 'none';
+                
+                // 更新数据时间
+                document.getElementById('update-time').textContent = new Date().toLocaleTimeString('zh-CN');
+            }, 800);
+        }
+        
+        // 更新天气显示
+        function updateWeather(data, city) {
+            document.querySelector('.temperature').textContent = data.temp + '°C';
+            document.querySelector('.weather-description').textContent = data.desc;
+            document.querySelector('.location').textContent = city;
+            
+            // 更新天气指标
+            document.querySelector('[data-detail="体感温度"] p').textContent = data.feel + '°C';
+            document.querySelector('[data-detail="风向"] p').textContent = data.wind;
+            document.querySelector('[data-detail="湿度"] p').textContent = data.humidity;
+            document.querySelector('[data-detail="紫外线"] p').textContent = data.uv;
+            document.querySelector('[data-detail="能见度"] p').textContent = data.visibility;
+            document.querySelector('[data-detail="气压"] p').textContent = data.pressure;
+            
+            // 更新天气图标和背景
+            const homePage = document.querySelector('.home-page');
+            const weatherIcon = document.querySelector('.weather-icon');
+            
+            // 移除所有天气类
+            homePage.classList.remove('sunny', 'cloudy', 'rainy');
+            
+            // 添加当前天气类
+            homePage.classList.add(data.type);
+            
+            // 更新图标
+            if (data.type === 'sunny') {
+                weatherIcon.className = 'fas fa-sun weather-icon';
+            } else if (data.type === 'cloudy') {
+                weatherIcon.className = 'fas fa-cloud weather-icon';
+            } else if (data.type === 'rainy') {
+                weatherIcon.className = 'fas fa-cloud-rain weather-icon';
+            }
+        }
+        
+        // 更新视频背景
+        function updateVideoBackground(weatherType, weatherDesc) {
+            const video = document.getElementById('container-video');
+            let videoSrc;
+            
+            // 根据天气类型和描述选择视频
+            if (weatherType === 'sunny') {
+                videoSrc = 'shipin.mp4';
+            } else if (weatherType === 'cloudy' || weatherDesc.includes('阴')) {
+                videoSrc = 'shipin2.mp4';
+            } else if (weatherType === 'rainy' || weatherDesc.includes('雨')) {
+                videoSrc = 'shipin3.mp4';
+            } else {
+                // 默认情况
+                videoSrc = 'shipin.mp4';
+            }
+            
+            // 更新视频源
+            video.src = videoSrc;
+            video.load();
+            video.play().catch(e => {
+                console.log('视频自动播放被阻止:', e);
+            });
+        }
+        
+        // 更新建议
+        function updateSuggestions(data, city) {
+            // 根据天气数据生成不同的建议
+            const outfitSuggestions = generateOutfitSuggestions(data);
+            const otherSuggestions = generateOtherSuggestions(data);
+            
+            // 更新穿搭建议
+            const outfitCards = document.querySelectorAll('.outfit-page .advice-card');
+            outfitCards[0].querySelector('p').textContent = outfitSuggestions.clothing;
+            outfitCards[1].querySelector('p').textContent = outfitSuggestions.sunscreen;
+            outfitCards[2].querySelector('p').textContent = outfitSuggestions.allergy;
+            outfitCards[3].querySelector('p').textContent = outfitSuggestions.footwear;
+            outfitCards[4].querySelector('p').textContent = outfitSuggestions.umbrella;
+            outfitCards[5].querySelector('p').textContent = outfitSuggestions.windProof;
+            
+            // 更新其他建议
+            const otherCards = document.querySelectorAll('.other-page .advice-card');
+            otherCards[0].querySelector('p').textContent = otherSuggestions.sports;
+            otherCards[1].querySelector('p').textContent = otherSuggestions.fishing;
+            otherCards[2].querySelector('p').textContent = otherSuggestions.carWash;
+        }
+        
+        // 更新指数
+        function updateIndices(data) {
+            document.getElementById('uv-index').textContent = data.uvIndex;
+            document.getElementById('uv-desc').textContent = data.uvDesc;
+            document.getElementById('dressing-index').textContent = data.dressingIndex;
+            document.getElementById('dressing-desc').textContent = data.dressingDesc;
+            document.getElementById('carwash-index').textContent = data.carwashIndex;
+            document.getElementById('carwash-desc').textContent = data.carwashDesc;
+            document.getElementById('cold-index').textContent = data.coldIndex;
+            document.getElementById('cold-desc').textContent = data.coldDesc;
+        }
+        
+        // 更新预报
+        function updateForecast(city) {
+            // 模拟预报数据
+            const forecastData = [
+                {
+                    date: getFutureDate(1),
+                    temp: Math.floor(Math.random() * 10) + 18 + '°C',
+                    condition: ['晴', '多云', '小雨', '阴'][Math.floor(Math.random() * 4)],
+                    wind: ['东南极', '西北风2级', '西南风1级', '东风3级'][Math.floor(Math.random() * 4)],
+                    humidity: Math.floor(Math.random() * 30) + 40 + '%'
+                },
+                {
+                    date: getFutureDate(2),
+                    temp: Math.floor(Math.random() * 10) + 16 + '°C',
+                    condition: ['晴', '多云', '小雨', '阴'][Math.floor(Math.random() * 4)],
+                    wind: ['东南风3级', '西北风2级', '西南风1级', '东风3级'][Math.floor(Math.random() * 4)],
+                    humidity: Math.floor(Math.random() * 30) + 40 + '%'
+                },
+                {
+                    date: getFutureDate(3),
+                    temp: Math.floor(Math.random() * 10) + 14 + '°C',
+                    condition: ['晴', '多云', '小雨', '阴'][Math.floor(Math.random() * 4)],
+                    wind: ['东南风3级', '西北风2级', '西南风1级', '东风3级'][Math.floor(Math.random() * 4)],
+                    humidity: Math.floor(Math.random() * 30) + 40 + '%'
+                }
+            ];
+            
+            // 更新预报数据
+            forecastData.forEach((day, index) => {
+                const i = index + 1;
+                document.getElementById(`forecast-date-${i}`).textContent = day.date;
+                document.getElementById(`forecast-temp-${i}`).textContent = day.temp;
+                document.getElementById(`forecast-condition-${i}`).textContent = day.condition;
+                document.getElementById(`forecast-wind-${i}`).textContent = day.wind;
+                document.getElementById(`forecast-humidity-${i}`).textContent = day.humidity;
+            });
+        }
+        
+        function getFutureDate(days) {
+            const date = new Date();
+            date.setDate(date.getDate() + days);
+            return `${date.getMonth() + 1}月${date.getDate()}日 ${['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'][date.getDay()]}`;
+        }
+        
+        // 生成穿搭建议
+        function generateOutfitSuggestions(data) {
+            const temp = data.temp;
+            const uv = data.uv;
+            const humidity = parseInt(data.humidity);
+            const weatherType = data.type;
+            
+            let clothing, sunscreen, allergy, footwear, umbrella, windProof;
+            
+            // 穿衣建议
+            if (temp >= 30) {
+                clothing = "天气炎热，建议穿着轻薄透气的夏装，如短袖、短裤、裙子等，选择棉麻等天然材质。浅色系衣物可以更好地反射阳光，保持凉爽舒适。";
+            } else if (temp >= 25) {
+                clothing = "天气温暖，建议穿着短袖、薄长裤或裙子，可携带一件薄外套备用。选择透气性好的面料，避免过于紧身的款式。";
+            } else if (temp >= 20) {
+                clothing = "天气舒适，建议穿着长袖T恤、薄款针织衫或轻便外套，搭配长裤。分层穿着便于根据温度变化调整衣物。";
+            } else if (temp >= 15) {
+                clothing = "天气微凉，建议穿着长袖上衣加外套，可选择牛仔外套、风衣或轻薄夹克。注意保护颈部和手腕等易受凉部位。";
+            } else if (temp >= 10) {
+                clothing = "天气较凉，建议穿着毛衣、厚外套，注意保暖。可搭配围巾增加保暖性，同时作为时尚配饰。";
+            } else if (temp >= 5) {
+                clothing = "天气寒冷，建议穿着羽绒服、厚毛衣，戴围巾和手套。选择防风面料的外套，减少热量流失。";
+            } else {
+                clothing = "天气严寒，建议穿着厚羽绒服、保暖内衣，戴帽子、围巾和手套，注意防寒保暖。多层穿着比单层厚重衣物更保暖。";
+            }
+            
+            // 防晒建议
+            if (uv === '很强') {
+                sunscreen = "紫外线辐射极强，外出必须采取防护措施，涂擦SPF30以上、PA+++的防晒霜，戴帽子、太阳镜，尽量在阴凉处行走。每2小时补涂一次防晒霜。";
+            } else if (uv === '强') {
+                sunscreen = "紫外线辐射强，外出建议涂擦SPF20-25、PA++的防晒护肤品，戴帽子、太阳镜。上午10点至下午2点避免长时间户外活动。";
+            } else if (uv === '中等') {
+                sunscreen = "紫外线强度中等，外出建议涂擦SPF15-20、PA+的防晒护肤品，戴帽子、太阳镜。中午时段尽量减少直接暴露在阳光下。";
+            } else {
+                sunscreen = "紫外线强度弱，不需要特别防护，但长期户外活动建议涂擦SPF8-12的防晒护肤品。敏感肌肤人群仍需注意防护。";
+            }
+            
+            // 过敏提醒
+            if (weatherType === 'rainy') {
+                allergy = "雨天空气中花粉和污染物较少，过敏风险低，适合过敏人群外出。但注意霉菌可能增加，对霉菌过敏者需小心。";
+            } else if (weatherType === 'sunny' && humidity < 50) {
+                allergy = "晴天干燥，空气中花粉和尘螨可能较多，过敏人群需注意防护，可佩戴口罩。回家后及时更换衣物并洗脸。";
+            } else {
+                allergy = "今日过敏风险一般，敏感人群可正常外出，如感不适请及时采取防护措施。注意关闭车窗和室内窗户减少花粉进入。";
+            }
+            
+            // 鞋类建议
+            if (weatherType === 'rainy') {
+                footwear = "雨天路滑，建议穿着防滑鞋底的鞋子，如雨靴或防水运动鞋。避免穿着皮质鞋底的正式鞋类，容易打滑。";
+            } else if (temp >= 25) {
+                footwear = "天气炎热，建议穿着透气性好的凉鞋、帆布鞋或网面运动鞋。避免穿着密闭的靴子或皮鞋，以免脚部过热。";
+            } else if (temp >= 15) {
+                footwear = "天气适宜，各种鞋类均可选择。运动鞋、休闲鞋、皮鞋都是不错的选择，根据活动场合选择合适的鞋类。";
+            } else {
+                footwear = "天气较凉，建议穿着保暖的鞋子，如靴子或厚底运动鞋。确保鞋子的防水性，以应对可能的降水。";
+            }
+            
+            // 雨具准备
+            if (weatherType === 'rainy') {
+                umbrella = "今日有降水，外出必须携带雨具。建议选择坚固的雨伞或轻便雨衣，确保能够有效防雨。";
+            } else if (weatherType === 'cloudy') {
+                umbrella = "今日多云，但有降水可能，建议携带轻便雨具备用。折叠伞便于携带，不占空间。";
+            } else {
+                umbrella = "今日无降水概率，无需携带雨具。但建议关注晚间天气变化，如有户外活动计划，可准备轻便雨具以防万一。";
+            }
+            
+            // 防风建议
+            if (data.wind.includes('4级') || data.wind.includes('5级') || data.wind.includes('6级')) {
+                windProof = "今日风力较大，建议穿着防风外套，戴帽子保护头部。避免穿着过于宽松的衣物，减少风阻。";
+            } else if (data.wind.includes('3级')) {
+                windProof = "今日有微风，建议准备一件轻便防风外套。长发人士建议束发，避免头发被风吹乱。";
+            } else {
+                windProof = "今日风力较小，无需特别防风措施。但傍晚时分可能有微风，如需长时间在户外，可准备一件轻便防风外套。";
+            }
+            
+            return { clothing, sunscreen, allergy, footwear, umbrella, windProof };
+        }
+        
+        // 生成其他建议
+        function generateOtherSuggestions(data) {
+            const temp = data.temp;
+            const weatherType = data.type;
+            const pressure = parseInt(data.pressure);
+            
+            let sports, fishing, carWash;
+            
+            // 运动建议
+            if (weatherType === 'sunny' && temp < 30) {
+                sports = "天气适宜户外运动，可以进行慢跑、骑自行车、球类运动等，注意补充水分和防晒。清晨和傍晚是最佳运动时段。";
+            } else if (weatherType === 'sunny' && temp >= 30) {
+                sports = "天气炎热，建议在早晚凉爽时段进行户外运动，或选择室内运动，注意防暑降温。运动前后充分补充水分和电解质。";
+            } else if (weatherType === 'cloudy') {
+                sports = "多云天气非常适合运动，既不会太晒也不会太热，可以进行各种户外运动。湿度适中，有利于耐力表现。";
+            } else if (weatherType === 'rainy') {
+                sports = "雨天建议进行室内运动，如健身房、游泳馆、室内球场等，避免淋雨感冒。如必须在户外运动，注意防滑和安全。";
+            } else {
+                sports = "根据天气情况选择适宜的运动方式，注意运动安全和防护。适度运动有助于增强免疫力。";
+            }
+            
+            // 钓鱼建议
+            if (pressure >= 1010 && pressure <= 1020 && weatherType !== 'rainy') {
+                fishing = "今日气压适宜，鱼类活跃度较高，是钓鱼的好时机，建议使用活饵。清晨和黄昏是鱼类最活跃的时段。";
+            } else if (weatherType === 'rainy') {
+                fishing = "雨天鱼类可能更加活跃，但需要注意安全，建议在安全的地点进行垂钓。使用颜色鲜艳的鱼饵更容易吸引鱼类。";
+            } else {
+                fishing = "今日钓鱼条件一般，建议选择鱼类常出没的水域，耐心等待。可尝试不同深度的钓点寻找鱼群。";
+            }
+            
+            // 洗车建议
+            if (weatherType === 'sunny') {
+                carWash = "未来24小时无雨，非常适合洗车，洗后车辆能快速晾干。建议上午进行洗车作业，避免中午阳光直射导致水渍。";
+            } else if (weatherType === 'cloudy') {
+                carWash = "多云天气可以洗车，但建议确认短期无雨后再进行洗车作业。洗车后可用软布擦干，防止水渍形成。";
+            } else {
+                carWash = "近期有降雨可能，不建议洗车，如需清洗请选择室内洗车场。等待天气转晴后再进行洗车作业。";
+            }
+            
+            return { sports, fishing, carWash };
+        }
+        
+        // 指标详情显示
+        document.querySelectorAll('.weather-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const detail = this.getAttribute('data-detail');
+                const overlay = document.getElementById('detail-overlay');
+                const title = document.getElementById('detail-title');
+                const content = document.getElementById('detail-content');
+                
+                // 设置详情内容
+                title.textContent = detail;
+                
+                // 根据不同的指标显示不同的详情
+                switch(detail) {
+                    case '体感温度':
+                        content.textContent = '体感温度是指人体感受到的空气温度，受湿度、风速和辐射等因素影响。当前体感温度比实际温度高2°C，主要是因为湿度较高。';
+                        break;
+                    case '风向':
+                        content.textContent = '风向是指风的来向。当前为东南风，风速约为3-4级，较为温和。东南风通常带来温暖湿润的空气，可能会增加湿度。';
+                        break;
+                    case '湿度':
+                        content.textContent = '湿度表示空气中水蒸气的含量。当前湿度为65%，属于舒适范围，不会感到过于干燥或潮湿。适宜湿度范围为40%-70%。';
+                        break;
+                    case '紫外线':
+                        content.textContent = '紫外线指数表示太阳辐射中紫外线辐射的强度。当前紫外线强度为中等，外出时需要采取一定的防护措施，如使用防晒霜、戴帽子等。';
+                        break;
+                    case '能见度':
+                        content.textContent = '能见度是指正常人视力能将目标物从背景中识别出来的最大距离。当前能见度为10公里，空气质量较好，适合户外活动和远眺。';
+                        break;
+                    case '气压':
+                        content.textContent = '气压是作用在单位面积上的大气压力。当前气压为1015百帕，属于正常范围，天气状况稳定。气压变化可能会影响某些人的关节疼痛。';
+                        break;
+                }
+                
+                overlay.classList.add('active');
+            });
+        });
+        
+        // 关闭详情
+        document.getElementById('close-detail').addEventListener('click', function() {
+            document.getElementById('detail-overlay').classList.remove('active');
+        });
+        
+        // 点击 overlay 背景关闭详情
+        document.getElementById('detail-overlay').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('active');
+            }
+        });
+        
+        // 视频控制功能
+        const video = document.getElementById('container-video');
+        const videoControl = document.getElementById('video-control');
+        let isVideoPlaying = true;
+        
+        videoControl.addEventListener('click', function() {
+            if (isVideoPlaying) {
+                video.pause();
+                videoControl.innerHTML = '<i class="fas fa-play"></i>';
+            } else {
+                video.play();
+                videoControl.innerHTML = '<i class="fas fa-pause"></i>';
+            }
+            isVideoPlaying = !isVideoPlaying;
+        });
+        
+        // 初始化显示北京天气
+        window.addEventListener('load', function() {
+            updateWeather(weatherData['北京'], '北京');
+            updateSuggestions(weatherData['北京'], '北京');
+            updateForecast('北京');
+            updateIndices(weatherData['北京']);
+            updateVideoBackground(weatherData['北京'].type, weatherData['北京'].desc);
+            
+            // 设置当前日期
+            const now = new Date();
+            document.getElementById('update-time').textContent = now.toLocaleTimeString('zh-CN');
+        });
+    </script>
+</body>
+</html>
